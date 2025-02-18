@@ -40,6 +40,8 @@ knn_5 = KNeighborsClassifier(n_neighbors=5)
 knn_10 = KNeighborsClassifier(n_neighbors=10)
 mlp_relu = MLPClassifier(hidden_layer_sizes=(100,), activation="relu", max_iter=2000, random_state=42)
 mlp_tanh = MLPClassifier(hidden_layer_sizes=(100,), activation="tanh", max_iter=2000, random_state=42)
+mlp_relu_large = MLPClassifier(hidden_layer_sizes=(200, 100), activation="relu", max_iter=2000, random_state=42)
+mlp_tanh_large = MLPClassifier(hidden_layer_sizes=(200, 100), activation="tanh", max_iter=2000, random_state=42)
 kmeans = KMeans(n_clusters=len(np.unique(y)), random_state=42)
 
 # Dicionário com os modelos
@@ -50,6 +52,8 @@ models = {
     "kNN (k=10)": knn_10,
     "MLP (ReLU)": mlp_relu,
     "MLP (Tanh)": mlp_tanh,
+    "MLP Large (ReLu)": mlp_relu_large,
+    "MLP Large (Tanh)":mlp_tanh_large,
     "K-Means": kmeans
 }
 
@@ -59,7 +63,8 @@ results = {}
 # Variáveis para salvar a curva de erro das MLPs
 loss_curve_relu = []
 loss_curve_tanh = []
-
+loss_curve_tanh_large = []
+loss_curve_relu_large = []
 for name, model in models.items():
     accuracies = []
     
@@ -85,6 +90,10 @@ for name, model in models.items():
             loss_curve_relu.append(model.loss_curve_)
         elif name == "MLP (Tanh)":
             loss_curve_tanh.append(model.loss_curve_)
+        elif name == "MLP Large (Tanh)":
+            loss_curve_tanh_large.append(model.loss_curve_)
+        elif name == "MLP Large (ReLu)":
+            loss_curve_relu_large.append(model.loss_curve_)
     
     # Média dos 10 folds
     results[name] = np.mean(accuracies) * 100
@@ -100,6 +109,10 @@ for curve in loss_curve_relu:
     plt.plot(curve, label="MLP (ReLU) - Folds")
 for curve in loss_curve_tanh:
     plt.plot(curve, label="MLP (Tanh) - Folds")
+for curve in loss_curve_tanh_large:
+    plt.plot(curve, label="MLP Large (Tanh) - Folds")
+for curve in loss_curve_relu_large:
+    plt.plot(curve, label="MLP Large (ReLu) - Folds")
 
 plt.xlabel("Épocas")
 plt.ylabel("Erro")
