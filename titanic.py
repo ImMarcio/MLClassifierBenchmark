@@ -9,11 +9,10 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.cluster import KMeans
 from sklearn.metrics import accuracy_score
-
-
+from collections import Counter  
 
 # 📥  Carregar o dataset Titanic
-df = pd.read_csv("datasets/titanic/train.csv")
+df = pd.read_csv("datasets/titanic/TitanicDeathPrediction.csv")
 
 # Selecionar apenas colunas relevantes e tratar valores faltantes
 df = df[['Survived', 'Pclass', 'Sex', 'Age', 'Fare']].dropna()
@@ -53,7 +52,7 @@ models = {
     "MLP (ReLU)": mlp_relu,
     "MLP (Tanh)": mlp_tanh,
     "MLP Large (ReLu)": mlp_relu_large,
-    "MLP Large (Tanh)":mlp_tanh_large,
+    "MLP Large (Tanh)": mlp_tanh_large,
     "K-Means": kmeans
 }
 
@@ -65,6 +64,7 @@ loss_curve_relu = []
 loss_curve_tanh = []
 loss_curve_tanh_large = []
 loss_curve_relu_large = []
+
 for name, model in models.items():
     accuracies = []
     
@@ -75,8 +75,17 @@ for name, model in models.items():
         # Treinar e testar o modelo
         if "K-Means" in name:
             model.fit(X_train)
-            y_pred = model.predict(X_test)
-            y_pred = np.array([y_train[i] for i in y_pred])  # Ajustar rótulos
+            cluster_labels_train = model.labels_
+            cluster_labels_test = model.predict(X_test)
+
+            # Mapeamento dos clusters para os rótulos reais
+            mapping = {}
+            for cluster_id in range(len(np.unique(y))):
+                most_frequent_label = Counter(y_train[cluster_labels_train == cluster_id]).most_common(1)[0][0]
+                mapping[cluster_id] = most_frequent_label
+
+            # Aplicar o mapeamento aos rótulos dos clusters
+            y_pred = np.array([mapping[cluster_id] for cluster_id in cluster_labels_test])
         else:
             model.fit(X_train, y_train)
             y_pred = model.predict(X_test)
@@ -103,8 +112,6 @@ df_results = pd.DataFrame.from_dict(results, orient="index", columns=["Accuracy 
 print(df_results)
 
 # Plotar as curvas de erro para MLP (ReLU) e MLP (Tanh)
-# As curvas de erro podem ter comprimentos diferentes, então plotaremos todas as iterações separadamente
-
 for curve in loss_curve_relu:
     plt.plot(curve, label="MLP (ReLU) - Folds")
 for curve in loss_curve_tanh:
@@ -119,7 +126,6 @@ plt.ylabel("Erro")
 plt.title("Evolução do Erro no Treinamento das MLPs")
 plt.legend()
 plt.show()
-
 
 # Plotando o gráfico de barras com seaborn
 plt.figure(figsize=(10, 5))  # Tamanho da figura
