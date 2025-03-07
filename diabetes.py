@@ -15,7 +15,7 @@ from collections import Counter
 
 
 # Código para carregar o dataset via pandas
-df = pd.read_csv("datasets/diabetes/diabetes_prediction_dataset.csv", nrows = 150)
+df = pd.read_csv("datasets/diabetes_prediction_dataset.csv", nrows = 150)
 
 
 # 1. Pré-processamento dos dados =======================

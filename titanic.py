@@ -15,7 +15,7 @@ from collections import Counter
 
 
 # Código para carregar o dataset via pandas
-df = pd.read_csv("datasets/titanic/TitanicDeathPrediction.csv")
+df = pd.read_csv("datasets/TitanicDeathPrediction.csv")
 
 
 # 1. Pré-processamento dos dados =======================
