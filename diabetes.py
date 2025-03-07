@@ -13,42 +13,31 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import accuracy_score
 from collections import Counter  
 
-#Código para carregar o dataset via pandas
-df = pd.read_csv("datasets/diabetes/diabetes_prediction_dataset.csv", nrows=150 )
+
+# Código para carregar o dataset via pandas
+df = pd.read_csv("datasets/diabetes/diabetes_prediction_dataset.csv", nrows = 150)
 
 
+# 1. Pré-processamento dos dados =======================
 
-
-#Analisando o dataset
-
-#Removendo linhas com valores NaN
+# Removendo linhas com valores nulos
 df = df.dropna()
 
-
-
-#Normalinando colunas categóricas
-column_transformer = make_column_transformer((OneHotEncoder(), ['gender','smoking_history']), remainder='passthrough')
+# Normalinando colunas categóricas
+column_transformer = make_column_transformer((OneHotEncoder(), ['gender', 'smoking_history']), remainder = 'passthrough')
 df = column_transformer.fit_transform(df)
+columns_names = [name.split("__")[-1] for name in column_transformer.get_feature_names_out()] # Removendo prefixos nos nomes da transformação
+df = pd.DataFrame(data = df, columns = columns_names)
 
-#Removendo prefixos da transformação
-columns_names = [
-    name.split("__")[-1] for name in column_transformer.get_feature_names_out()
-]
+# Normalizando os dados numéricos 
+df[['blood_glucose_level', 'HbA1c_level', 'bmi', 'age']] = MinMaxScaler().fit_transform(df[['blood_glucose_level', 'HbA1c_level', 'bmi', 'age']])
 
-df = pd.DataFrame(data=df, columns=columns_names)
-
-
-
-
-#Normalizando os dados numéricos 
-df[['blood_glucose_level', 'HbA1c_level', 'bmi','age']] = MinMaxScaler().fit_transform(df[['blood_glucose_level', 'HbA1c_level', 'bmi','age']])
-print(df.head(3))
-
-#Separando 
-X = df.iloc[:, :-1]  # Todas as colunas, exceto a última
-y = df.iloc[:, -1]   # Apenas a última coluna
+# Separando a coluna target
+X = df.iloc[:, :-1]   # Todas as colunas, exceto a última
+y = df.iloc[:, -1]    # Apenas a última coluna
 
 
+# 2. Carregando os modelos de ML =======================
 
 # Modelos de Machine Learning
 tree_gini = DecisionTreeClassifier(criterion="gini")
@@ -60,8 +49,6 @@ mlp_tanh = MLPClassifier(hidden_layer_sizes=(100,), activation="tanh", max_iter=
 mlp_relu_large = MLPClassifier(hidden_layer_sizes=(200, 100), activation="relu", max_iter=2000, random_state=42)
 mlp_tanh_large = MLPClassifier(hidden_layer_sizes=(200, 100), activation="tanh", max_iter=2000, random_state=42)
 kmeans = KMeans(n_clusters=len(np.unique(y)), random_state=42)
-
-
 
 # Dicionário com os modelos
 models = {
@@ -76,18 +63,18 @@ models = {
     "K-Means": kmeans
 }
 
-
 # Variáveis para salvar a curva de erro das MLPs
 loss_curve_relu = []
 loss_curve_tanh = []
 loss_curve_tanh_large = []
 loss_curve_relu_large = []
 
-#Números de interações 
+# Números de interações 
 folds = 10
-
 kf = StratifiedKFold(n_splits = folds)
 
+
+# 3. Treinamento dos modelos =======================
 
 results = {}
 
@@ -110,6 +97,7 @@ for name, model in models.items():
                 mapping[cluster_id] = most_frequent_label
 
             y_pred = np.array([mapping[cluster_id] for cluster_id in cluster_labels_test])
+
         else:
             model.fit(X_train, y_train)
             y_pred = model.predict(X_test)
@@ -130,11 +118,15 @@ for name, model in models.items():
     # Média dos 10 folds
     results[name] = np.mean(accuracies) * 100
 
-# 📊  Exibir os resultados
+
+# 4. Exibição dos resultados no console =======================
+
 df_results = pd.DataFrame.from_dict(results, orient="index", columns=["Accuracy (%)"])
 df_results = df_results.round(2)
 print(df_results)
 
+
+# 5. Exibição dos resultados visualmente =======================
 
 # Plotar as curvas de erro para MLP (ReLU) e MLP (Tanh)
 for curve in loss_curve_relu:
