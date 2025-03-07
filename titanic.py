@@ -1,9 +1,11 @@
-import numpy as np
 import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import make_column_transformer
+from sklearn.model_selection import StratifiedKFold
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split, KFold
-from sklearn.preprocessing import MinMaxScaler, LabelEncoder
+from sklearn.preprocessing import MinMaxScaler,LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
@@ -14,23 +16,29 @@ from collections import Counter
 # 📥  Carregar o dataset Titanic
 df = pd.read_csv("datasets/titanic/TitanicDeathPrediction.csv")
 
-# Selecionar apenas colunas relevantes e tratar valores faltantes
-df = df[['Survived', 'Pclass', 'Sex', 'Age', 'Fare']].dropna()
+#Deixando apenas as colunas relevantes e retirando linhas com valores nulos
+df = df[['Age','Pclass','Sex','Fare','Survived']].dropna()
 
-# Converter 'Sex' para valores numéricos (0 = Male, 1 = Female)
-df['Sex'] = LabelEncoder().fit_transform(df['Sex'])
+#Normalinando a coluna sex
+column_transformer = make_column_transformer((OneHotEncoder(), ['Sex']), remainder='passthrough')
+df = column_transformer.fit_transform(df)
 
-# Normalizar apenas as colunas numéricas (Age, Fare, Pclass)
-scaler = MinMaxScaler()
-df[['Age', 'Fare', 'Pclass']] = scaler.fit_transform(df[['Age', 'Fare', 'Pclass']])
+#Removendo prefixos da transformação
+columns_names = [
+    name.split("__")[-1] for name in column_transformer.get_feature_names_out()
+]
 
-# Exibir os primeiros dados
-print(df.head())
+df = pd.DataFrame(data=df, columns=columns_names)
 
-# Preparar os dados para treinamento e teste
-kf = KFold(n_splits=10, shuffle=True, random_state=42)
-X = df.iloc[:, 1:].values  # Atributos
-y = df.iloc[:, 0].values   # Labels
+
+
+#Normalizando os dados numéricos 
+df[['Fare', 'Age', 'Pclass']] = MinMaxScaler().fit_transform(df[['Fare', 'Age', 'Pclass']])
+
+
+#Separando y e X
+y = df.iloc[:, -1]  # Acessa a coluna na posição 6
+X = df.iloc[:, :-1]  # Remove a coluna na posição 6
 
 # Modelos de Machine Learning
 tree_gini = DecisionTreeClassifier(criterion="gini")
@@ -42,6 +50,8 @@ mlp_tanh = MLPClassifier(hidden_layer_sizes=(100,), activation="tanh", max_iter=
 mlp_relu_large = MLPClassifier(hidden_layer_sizes=(200, 100), activation="relu", max_iter=2000, random_state=42)
 mlp_tanh_large = MLPClassifier(hidden_layer_sizes=(200, 100), activation="tanh", max_iter=2000, random_state=42)
 kmeans = KMeans(n_clusters=len(np.unique(y)), random_state=42)
+
+
 
 # Dicionário com os modelos
 models = {
@@ -56,8 +66,6 @@ models = {
     "K-Means": kmeans
 }
 
-# Rodar os Modelos e Calcular as Métricas
-results = {}
 
 # Variáveis para salvar a curva de erro das MLPs
 loss_curve_relu = []
@@ -65,33 +73,38 @@ loss_curve_tanh = []
 loss_curve_tanh_large = []
 loss_curve_relu_large = []
 
+#Números de interações 
+folds = 10
+
+kf = StratifiedKFold(n_splits = folds)
+
+
+results = {}
+
 for name, model in models.items():
     accuracies = []
-    
-    for train_index, test_index in kf.split(X):
-        X_train, X_test = X[train_index], X[test_index]
-        y_train, y_test = y[train_index], y[test_index]
 
-        # Treinar e testar o modelo
+    for train_index, test_index in kf.split(X,y):
+        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+
         if "K-Means" in name:
             model.fit(X_train)
             cluster_labels_train = model.labels_
             cluster_labels_test = model.predict(X_test)
 
-            # Mapeamento dos clusters para os rótulos reais
             mapping = {}
+
             for cluster_id in range(len(np.unique(y))):
                 most_frequent_label = Counter(y_train[cluster_labels_train == cluster_id]).most_common(1)[0][0]
                 mapping[cluster_id] = most_frequent_label
 
-            # Aplicar o mapeamento aos rótulos dos clusters
             y_pred = np.array([mapping[cluster_id] for cluster_id in cluster_labels_test])
         else:
             model.fit(X_train, y_train)
             y_pred = model.predict(X_test)
-        
-        # Calcular acurácia
-        acc = accuracy_score(y_test, y_pred)
+
+        acc = accuracy_score(y_test,y_pred)
         accuracies.append(acc)
 
         # Salvar a curva de erro para as MLPs
@@ -103,13 +116,15 @@ for name, model in models.items():
             loss_curve_tanh_large.append(model.loss_curve_)
         elif name == "MLP Large (ReLu)":
             loss_curve_relu_large.append(model.loss_curve_)
-    
+
     # Média dos 10 folds
     results[name] = np.mean(accuracies) * 100
 
 # 📊  Exibir os resultados
 df_results = pd.DataFrame.from_dict(results, orient="index", columns=["Accuracy (%)"])
+df_results = df_results.round(2)
 print(df_results)
+
 
 # Plotar as curvas de erro para MLP (ReLU) e MLP (Tanh)
 for curve in loss_curve_relu:
