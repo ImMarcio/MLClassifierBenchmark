@@ -46,6 +46,6 @@ MLP (ReLU)         |      94.00
 MLP (Tanh)         |      94.67
 MLP Large (ReLu)   |      92.00
 MLP Large (Tanh)   |      94.00
-K-Means            |      88.
+K-Means            |      88.67
 
 📌 *Este estudo proporciona insights valiosos sobre o desempenho de diferentes algoritmos em contextos distintos de classificação!*
