@@ -18,6 +18,7 @@ from collections import Counter
 df = pd.read_csv("datasets/diabetes_prediction_dataset.csv", nrows = 150)
 
 
+
 # 1. Pré-processamento dos dados =======================
 
 # Removendo linhas com valores nulos
@@ -35,6 +36,7 @@ df[['blood_glucose_level', 'HbA1c_level', 'bmi', 'age']] = MinMaxScaler().fit_tr
 # Separando a coluna target
 X = df.iloc[:, :-1]   # Todas as colunas, exceto a última
 y = df.iloc[:, -1]    # Apenas a última coluna
+
 
 
 # 2. Carregando os modelos de ML =======================
@@ -69,12 +71,12 @@ loss_curve_tanh = []
 loss_curve_tanh_large = []
 loss_curve_relu_large = []
 
-# Números de interações 
-folds = 10
-kf = StratifiedKFold(n_splits = folds)
 
 
 # 3. Treinamento dos modelos =======================
+
+# Dividindo as interações do Kfold
+kf = StratifiedKFold(n_splits = 10)
 
 results = {}
 
@@ -90,6 +92,7 @@ for name, model in models.items():
             cluster_labels_train = model.labels_
             cluster_labels_test = model.predict(X_test)
 
+            # Fazendo o mapeamento dos clusters para as classes reais
             mapping = {}
 
             for cluster_id in range(len(np.unique(y))):
@@ -119,11 +122,13 @@ for name, model in models.items():
     results[name] = np.mean(accuracies) * 100
 
 
+
 # 4. Exibição dos resultados no console =======================
 
 df_results = pd.DataFrame.from_dict(results, orient="index", columns=["Accuracy (%)"])
 df_results = df_results.round(2)
 print(df_results)
+
 
 
 # 5. Exibição dos resultados visualmente =======================
