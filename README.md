@@ -24,15 +24,15 @@
 
 Modelo             |      Acurácia
 ------------------ | ------------------
-Tree (Gini)              89.33
-Tree (Entropy)           86.67
-kNN (k=5)                89.33
-kNN (k=10)               89.33
-MLP (ReLU)               89.33
-MLP (Tanh)               90.00
-MLP Large (ReLu)         87.33
-MLP Large (Tanh)         86.00
-K-Means                  91.33
+Tree (Gini)        |      89.33
+Tree (Entropy)     |     86.67
+kNN (k=5)          |     89.33
+kNN (k=10)         |      89.33
+MLP (ReLU)         |      89.33
+MLP (Tanh)         |      90.00
+MLP Large (ReLu)   |      87.33
+MLP Large (Tanh)   |      86.00
+K-Means            |      91.33
 
 ### Dataset - **Diabetes** 💉
 
