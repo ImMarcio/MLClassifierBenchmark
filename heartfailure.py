@@ -5,38 +5,42 @@ from sklearn.model_selection import StratifiedKFold
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.preprocessing import MinMaxScaler,LabelEncoder
+from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.cluster import KMeans
 from sklearn.metrics import accuracy_score
-from collections import Counter  
-
+from collections import Counter
 
 # Código para carregar o dataset via pandas
-df = pd.read_csv("datasets/TitanicDeathPrediction.csv")
+df = pd.read_csv("datasets/Heart_Failure_Prediction .csv", nrows=150)
 
 
 
 # 1. Pré-processamento dos dados =======================
 
 # Deixando apenas as colunas relevantes e removendo linhas com valores nulos
-df = df[['Age', 'Pclass', 'Sex', 'Fare', 'Survived']].dropna()
+df = df[['Age', 'Sex', 'ChestPainType', 'RestingBP', 'Cholesterol', 'FastingBS', 'RestingECG', 'MaxHR', 'ExerciseAngina', 'Oldpeak', 'ST_Slope', 'HeartDisease']]
 
-# Normalinando colunas categóricas
-column_transformer = make_column_transformer((OneHotEncoder(), ['Sex']), remainder='passthrough')
-df = column_transformer.fit_transform(df)
-columns_names = [name.split("__")[-1] for name in column_transformer.get_feature_names_out()] # Removendo prefixos nos nomes da transformação
-df = pd.DataFrame(data=df, columns=columns_names)
+# Normalizando colunas categóricas
+column_transformer = make_column_transformer(
+    (OneHotEncoder(), ['Sex', 'ChestPainType', 'RestingECG', 'ExerciseAngina', 'ST_Slope']),
+    remainder='passthrough'
+)
 
-# Normalizando os dados numéricos 
-df[['Fare', 'Age', 'Pclass']] = MinMaxScaler().fit_transform(df[['Fare', 'Age', 'Pclass']])
+df_transformed = column_transformer.fit_transform(df)
+
+# Obtendo os nomes das colunas após a transformação
+columns_names = [name.split("__")[-1] for name in column_transformer.get_feature_names_out()]
+df_transformed = pd.DataFrame(data=df_transformed, columns=columns_names)
+
+# Normalizando os dados numéricos
+df_transformed[['Age', 'RestingBP', 'Cholesterol', 'MaxHR', 'Oldpeak']] = MinMaxScaler().fit_transform(df_transformed[['Age', 'RestingBP', 'Cholesterol', 'MaxHR', 'Oldpeak']])
 
 # Separando a coluna target
-X = df.iloc[:, :-1]   # Todas as colunas, exceto a última
-y = df.iloc[:, -1]    # Apenas a última coluna
-
+X = df_transformed.iloc[:, :-1]   # Todas as colunas, exceto a última
+y = df_transformed.iloc[:, -1]    # Apenas a última coluna (HeartDisease)
 
 
 # 2. Carregando os modelos de ML =======================
@@ -71,19 +75,18 @@ loss_curve_tanh = []
 loss_curve_tanh_large = []
 loss_curve_relu_large = []
 
-
+# Números de interações 
+folds = 10
+kf = StratifiedKFold(n_splits=folds)
 
 # 3. Treinamento dos modelos =======================
-
-# Dividindo as interações do Kfold 
-kf = StratifiedKFold(n_splits = 10)
 
 results = {}
 
 for name, model in models.items():
     accuracies = []
 
-    for train_index, test_index in kf.split(X,y):
+    for train_index, test_index in kf.split(X, y):
         X_train, X_test = X.iloc[train_index], X.iloc[test_index]
         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
@@ -92,7 +95,6 @@ for name, model in models.items():
             cluster_labels_train = model.labels_
             cluster_labels_test = model.predict(X_test)
 
-            # Fazendo o mapeamento dos clusters para as classes reais
             mapping = {}
 
             for cluster_id in range(len(np.unique(y))):
@@ -105,7 +107,7 @@ for name, model in models.items():
             model.fit(X_train, y_train)
             y_pred = model.predict(X_test)
 
-        acc = accuracy_score(y_test,y_pred)
+        acc = accuracy_score(y_test, y_pred)
         accuracies.append(acc)
 
         # Salvar a curva de erro para as MLPs
@@ -121,18 +123,12 @@ for name, model in models.items():
     # Média dos 10 folds
     results[name] = np.mean(accuracies) * 100
 
-
-
 # 4. Exibição dos resultados no console =======================
-
 df_results = pd.DataFrame.from_dict(results, orient="index", columns=["Accuracy (%)"])
 df_results = df_results.round(2)
 print(df_results)
 
-
-
 # 5. Exibição dos resultados visualmente =======================
-
 # Plotar as curvas de erro para MLP (ReLU) e MLP (Tanh)
 for curve in loss_curve_relu:
     plt.plot(curve, label="MLP (ReLU) - Folds")
