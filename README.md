@@ -4,7 +4,7 @@
 
 ## Datasets utilizados 📂
 
-1. [Heart Failure Prediction dataset](https://www.kaggle.com/datasets/fedesoriano/heart-failure-prediction/code) 🚢
+1. [Heart Failure Prediction dataset](https://www.kaggle.com/datasets/fedesoriano/heart-failure-prediction/code) 🫀
 2. [Diabetes prediction dataset](https://www.kaggle.com/datasets/iammustafatz/diabetes-prediction-dataset) 💉
 
 ## Algoritmos de ML utilizados 🤖
@@ -20,13 +20,13 @@
 
 *Porcentagens em média das predições*
 
-### Dataset - **Titanic** 🚢
+### Dataset - **Heart Failure** 🫀
 
 Modelo             |      Acurácia
 ------------------ | ------------------
 Tree (Gini)        |      89.33
-Tree (Entropy)     |     86.67
-kNN (k=5)          |     89.33
+Tree (Entropy)     |      86.67
+kNN (k=5)          |      89.33
 kNN (k=10)         |      89.33
 MLP (ReLU)         |      89.33
 MLP (Tanh)         |      90.00
