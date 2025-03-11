@@ -15,26 +15,32 @@ from collections import Counter
 
 
 # Código para carregar o dataset via pandas
-df = pd.read_csv("datasets/TitanicDeathPrediction.csv")
+df = pd.read_csv("datasets/Placement_Data_Full_Class.csv")
 
+print(df)
 
 # 1. Pré-processamento dos dados =======================
 
 # Deixando apenas as colunas relevantes e removendo linhas com valores nulos
-df = df[['Age', 'Pclass', 'Sex', 'Fare', 'Survived']].dropna()
+df = df.dropna()
 
 # Normalinando colunas categóricas
-column_transformer = make_column_transformer((OneHotEncoder(), ['Sex']), remainder='passthrough')
+column_transformer = make_column_transformer((OneHotEncoder(), ["gender", "ssc_b", "hsc_b", "hsc_s", "degree_t", "workex", "specialisation"]), remainder='passthrough')
 df = column_transformer.fit_transform(df)
-columns_names = [name.split("__")[-1] for name in column_transformer.get_feature_names_out()] # Removendo prefixos nos nomes da transformaçã
+columns_names = [name.split("__")[-1] for name in column_transformer.get_feature_names_out()] # Removendo prefixos nos nomes da transformação
 df = pd.DataFrame(data=df, columns=columns_names)
 
 # Normalizando os dados numéricos 
-df[['Fare', 'Age', 'Pclass']] = MinMaxScaler().fit_transform(df[['Fare', 'Age', 'Pclass']])
+df[["ssc_p", "hsc_p", "degree_p", "etest_p", "mba_p","salary"]] = MinMaxScaler().fit_transform(df[["ssc_p", "hsc_p", "degree_p", "etest_p", "mba_p","salary"]])
 
-# Separando a coluna target
-X = df.iloc[:, :-1]   # Todas as colunas, exceto a última
-y = df.iloc[:, -1]    # Apenas a última coluna
+label_encoder = LabelEncoder()
+df["status"] = label_encoder.fit_transform(df["status"])
+
+
+# Separação entre features e target
+X = df.drop(columns=["status"])
+y = df["status"]
+
 
 
 # 2. Carregando os modelos de ML =======================
