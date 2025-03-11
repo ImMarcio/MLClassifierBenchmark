@@ -14,7 +14,7 @@ from sklearn.metrics import accuracy_score
 from collections import Counter
 
 # Código para carregar o dataset via pandas
-df = pd.read_csv("datasets/heart.csv", nrows=150)
+df = pd.read_csv("datasets/Heart_Failure_Prediction .csv", nrows=150)
 
 
 
