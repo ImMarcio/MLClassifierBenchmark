@@ -4,7 +4,7 @@
 
 ## Datasets utilizados 📂
 
-1. [Titanic - Machine Learning from Disaster](https://www.kaggle.com/competitions/titanic) 🚢
+1. [Heart Failure Prediction dataset](https://www.kaggle.com/datasets/fedesoriano/heart-failure-prediction/code) 🚢
 2. [Diabetes prediction dataset](https://www.kaggle.com/datasets/iammustafatz/diabetes-prediction-dataset) 💉
 
 ## Algoritmos de ML utilizados 🤖
@@ -24,15 +24,15 @@
 
 Modelo             |      Acurácia
 ------------------ | ------------------
-Tree (Gini)        |      77.75%
-Tree (Entropy)     |      77.60%
-kNN (k=5)          |      81.38%
-kNN (k=10)         |      80.68%
-MLP (ReLU)         |      79.14%
-MLP (Tanh)         |      79.27%
-MLP Large (ReLu)   |      81.24%
-MLP Large (Tanh)   |      78.57%
-K-Means            |      78.00%
+Tree (Gini)              89.33
+Tree (Entropy)           86.67
+kNN (k=5)                89.33
+kNN (k=10)               89.33
+MLP (ReLU)               89.33
+MLP (Tanh)               90.00
+MLP Large (ReLu)         87.33
+MLP Large (Tanh)         86.00
+K-Means                  91.33
 
 ### Dataset - **Diabetes** 💉
 
